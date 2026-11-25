@@ -136,6 +136,16 @@ describe('Azure DevOps Plugin - acceptance criteria and system info (#8569)', ()
     expect(issue['systemInfo']).toBe('<div>Windows 11, build 42</div>');
   });
 
+  it('maps a Scrum backlog item’s acceptance criteria and leaves system info unset', async () => {
+    const issue = await getById({
+      'System.Title': 'Export as CSV',
+      'System.WorkItemType': 'Product Backlog Item',
+      'Microsoft.VSTS.Common.AcceptanceCriteria': '<ul><li>CSV downloads</li></ul>',
+    });
+    expect(issue['acceptanceCriteria']).toBe('<ul><li>CSV downloads</li></ul>');
+    expect(issue['systemInfo']).toBeUndefined();
+  });
+
   it('shows both in the issue panel, hidden when the work item lacks them', () => {
     const shown = definition.issueDisplay.filter((f) =>
       ['acceptanceCriteria', 'systemInfo'].includes(f.field),
