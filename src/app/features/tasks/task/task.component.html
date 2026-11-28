@@ -35,8 +35,7 @@
             [isPlayToggle]="isTouchPlayToggle()"
             [showDoneAnimation]="showDoneAnimation()"
             [showUndoneAnimation]="showUndoneAnimation()"
-            (toggled)="toggleTaskDone()"
-            (playToggled)="togglePlayPause()"
+            (toggled)="isTouchPlayToggle() ? togglePlayPause() : toggleTaskDone()"
             [attr.aria-label]="
               (isTouchPlayToggle()
                 ? isCurrent()

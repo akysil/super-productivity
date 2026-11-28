@@ -101,9 +101,10 @@ $cross-len: 15;
 
   // A task that is not tracking: a muted triangle offering "tap to start",
   // without the pop-in, which would replay on every row when input turns touch.
+  // The muted alpha keeps it above 3:1 contrast on the light and dark rows.
   .play-indicator--idle {
     fill: currentColor;
-    opacity: 0.3;
+    opacity: var(--muted-alpha);
     animation: none;
   }
 

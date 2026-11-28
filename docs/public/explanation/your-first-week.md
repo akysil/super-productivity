@@ -115,9 +115,9 @@ A task has a details panel and a menu, and each opens with a different gesture.[
 | Open the details: notes, subtasks, dates | Hover and click **Show/hide task panel**, `I` | Tap the task      |
 | Open the menu: plan, tag, move, delete   | Right-click the task, `Q`                     | Swipe left        |
 | Mark the task done                       | Click the circle, `D`                         | Swipe right       |
-| Start or pause tracking time             | Hover and click the play button, `Y`          | Tap the circle    |
+| Start or pause tracking time             | Hover and click play or pause, `Y`            | Tap the triangle  |
 
-On a touch screen, the circle of a task you can track shows a play triangle, so a tap starts or pauses tracking instead of marking the task done.[^touch-play]
+On a touch screen, while time tracking is on, the circle of an open task without subtasks shows a play triangle, so a tap starts or pauses tracking instead of marking the task done.[^touch-play]
 The menu holds quick actions on the task.
 The details panel holds what belongs to the task: notes, subtasks, attachments, the planned date, the deadline, and the tracked time.
 With a mouse, clicking the title edits it and clicking the rest of the row focuses the task, so that the single-key shortcuts apply to it.

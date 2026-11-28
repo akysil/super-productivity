@@ -14,7 +14,6 @@ import { DoneToggleComponent } from './done-toggle.component';
       [isCurrent]="isCurrent()"
       [isPlayToggle]="isPlayToggle()"
       (toggled)="toggledCount = toggledCount + 1"
-      (playToggled)="playToggledCount = playToggledCount + 1"
     ></done-toggle>
   `,
 })
@@ -25,7 +24,6 @@ class HostComponent {
   readonly isCurrent = signal(false);
   readonly isPlayToggle = signal(false);
   toggledCount = 0;
-  playToggledCount = 0;
 }
 
 describe('DoneToggleComponent', () => {
@@ -102,8 +100,9 @@ describe('DoneToggleComponent', () => {
     expect(stopped).not.toHaveBeenCalled();
   });
 
-  // #10122: on touch the task row turns the toggle into the start/pause
-  // control of time tracking; swiping right marks the task done.
+  // #10122: on touch the task row draws the toggle as the start/pause control
+  // of time tracking and routes `toggled` to it; swiping right marks the task
+  // done. The row's routing is covered by e2e/tests/mobile/done-toggle-play-touch-10122.spec.ts.
   describe('play toggle', () => {
     const setup = (
       opts: { isPlayToggle: boolean; isCurrent?: boolean } = { isPlayToggle: true },
@@ -118,24 +117,6 @@ describe('DoneToggleComponent', () => {
       };
     };
 
-    it('emits playToggled instead of toggled on a tap', () => {
-      const { host, el } = setup();
-      const ev = new MouseEvent('click', { bubbles: true, cancelable: true });
-      const stopped = spyOn(ev, 'stopPropagation');
-      el.dispatchEvent(ev);
-      expect(host.playToggledCount).toBe(1);
-      expect(host.toggledCount).toBe(0);
-      expect(stopped).toHaveBeenCalled();
-    });
-
-    it('emits playToggled on Enter and Space', () => {
-      const { host, el } = setup();
-      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-      expect(host.playToggledCount).toBe(2);
-      expect(host.toggledCount).toBe(0);
-    });
-
     it('is a button, not a checkbox', () => {
       const { el } = setup();
       expect(el.getAttribute('role')).toBe('button');
@@ -148,7 +129,6 @@ describe('DoneToggleComponent', () => {
       expect(el.getAttribute('aria-checked')).toBe('false');
       el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect(host.toggledCount).toBe(1);
-      expect(host.playToggledCount).toBe(0);
       expect(el.querySelector('.play-indicator')).toBeNull();
     });
 
@@ -183,13 +163,19 @@ describe('DoneToggleComponent', () => {
     });
 
     const setup = (
-      opts: { isTouch: boolean; isDone?: boolean; isMultiSelectAware?: boolean } = {
+      opts: {
+        isTouch: boolean;
+        isDone?: boolean;
+        isMultiSelectAware?: boolean;
+        isPlayToggle?: boolean;
+      } = {
         isTouch: true,
       },
     ): { host: HostComponent; el: HTMLElement } => {
       const fixture = TestBed.createComponent(HostComponent);
       fixture.componentInstance.isDone.set(!!opts.isDone);
       fixture.componentInstance.isMultiSelectAware.set(!!opts.isMultiSelectAware);
+      fixture.componentInstance.isPlayToggle.set(!!opts.isPlayToggle);
       fixture.detectChanges();
       const de = fixture.debugElement.query(By.directive(DoneToggleComponent));
       spyOn(de.componentInstance as DoneToggleComponent, 'isTouchActive').and.returnValue(
@@ -214,6 +200,13 @@ describe('DoneToggleComponent', () => {
       click(el);
       expect(haptic).not.toHaveBeenCalled();
       expect(host.toggledCount).toBe(1);
+    });
+
+    it('stays silent for a tap that starts or pauses tracking', () => {
+      const { host, el } = setup({ isTouch: true, isPlayToggle: true });
+      click(el);
+      expect(host.toggledCount).toBe(1);
+      expect(haptic).not.toHaveBeenCalled();
     });
 
     it('stays silent for a mouse click', () => {
