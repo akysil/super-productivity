@@ -1,5 +1,6 @@
-import { type Locator, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 import { expect, test } from '../../fixtures/test.fixture';
+import { touchPan } from '../../utils/touch-pan';
 
 /**
  * #10122: the hover play button is out of reach on touch, so there the box at
@@ -23,33 +24,6 @@ const switchToMouse = async (page: Page): Promise<void> => {
   await expect(page.locator('body')).toHaveClass(/isMousePrimary/);
 };
 
-const swipeRight = async (page: Page, target: Locator): Promise<void> => {
-  const box = await target.boundingBox();
-  if (!box) throw new Error('Swipe target has no bounding box');
-  const startOffset = box.width * 0.3;
-  const halfHeight = box.height / 2;
-  const stepWidth = box.width * 0.1;
-  const x = box.x + startOffset;
-  const y = box.y + halfHeight;
-  const cdp = await page.context().newCDPSession(page);
-  try {
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{ x, y }],
-    });
-    for (let step = 1; step <= 5; step++) {
-      const distance = stepWidth * step;
-      await cdp.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [{ x: x + distance, y }],
-      });
-    }
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  } finally {
-    await cdp.detach();
-  }
-};
-
 test.describe('Done box starts and pauses tracking on touch #10122', () => {
   // isMobile makes Chromium report `pointer: coarse`, as on a phone or tablet.
   test.use({ viewport: { width: 1024, height: 900 }, hasTouch: true, isMobile: true });
@@ -67,10 +41,10 @@ test.describe('Done box starts and pauses tracking on touch #10122', () => {
     const box = task.locator('done-toggle').first();
     await switchToTouch(page);
 
-    await expect(box).toHaveAttribute('role', 'button');
     await box.tap();
     await expect(task).toHaveClass(/isCurrent/);
     await expect(task).not.toHaveClass(/isDone/);
+    await expect(box).toHaveAttribute('role', 'button');
 
     await box.tap();
     await expect(task).not.toHaveClass(/isCurrent/);
@@ -88,11 +62,7 @@ test.describe('Done box starts and pauses tracking on touch #10122', () => {
     await workViewPage.addTask(title);
     const task = taskPage.getTaskByText(title);
     const box = task.locator('done-toggle').first();
-
-    await switchToTouch(page);
-    await expect(box).toHaveAttribute('role', 'button');
     await switchToMouse(page);
-    await expect(box).toHaveAttribute('role', 'checkbox');
 
     // Mouse to touch: the tap's own pointerdown flips the intent first.
     await box.tap();
@@ -100,8 +70,9 @@ test.describe('Done box starts and pauses tracking on touch #10122', () => {
     await expect(task).toHaveClass(/isCurrent/);
     await expect(task).not.toHaveClass(/isDone/);
 
-    // Touch to mouse: a click on the box marks the task done, as before.
+    // Touch to mouse: the box is a done checkbox again and a click completes.
     await switchToMouse(page);
+    await expect(box).toHaveAttribute('role', 'checkbox');
     await box.click();
     // The row moves to the done list; its old copy stays in the DOM while
     // the leave animation runs.
@@ -120,7 +91,14 @@ test.describe('Done box starts and pauses tracking on touch #10122', () => {
     const task = taskPage.getTaskByText(title);
     await switchToTouch(page);
 
-    await swipeRight(page, task);
+    const rowBox = await task.boundingBox();
+    if (!rowBox) throw new Error('task row has no bounding box');
+    // Start right of the done box, on the title.
+    const offsetX = rowBox.width * 0.3;
+    const halfHeight = rowBox.height / 2;
+    await touchPan(page, task, rowBox.width * 0.5, {
+      start: { x: rowBox.x + offsetX, y: rowBox.y + halfHeight },
+    });
     await expect(page.locator('task.isDone', { hasText: title })).toHaveCount(1);
   });
 });
