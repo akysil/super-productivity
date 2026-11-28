@@ -13,10 +13,11 @@
     rx="5.5"
     ry="5.5"
   />
-  @if (isCurrent() && !isDone() && !showDoneAnimation()) {
-    <!-- Play triangle (only rendered for current task) -->
+  @if ((isCurrent() || isPlayToggle()) && !isDone() && !showDoneAnimation()) {
+    <!-- Play triangle: the current task, or any task in play-toggle mode -->
     <polygon
       class="play-indicator"
+      [class.play-indicator--idle]="!isCurrent()"
       points="10,7 10,17 17,12"
     />
   }

@@ -104,6 +104,9 @@ To find one, open the ⋮ menu in the header of Today, a project, or a tag and c
 
 ## A task opens in two ways
 
+> [!NOTE]
+> Not released yet: tapping the circle to start or pause tracking ships in the first stable release after v20.1.0.
+
 A task has a details panel and a menu, and each opens with a different gesture.[^task-open]
 
 | To                                       | With mouse and keyboard                       | On a touch screen |
@@ -112,7 +115,9 @@ A task has a details panel and a menu, and each opens with a different gesture.[
 | Open the details: notes, subtasks, dates | Hover and click **Show/hide task panel**, `I` | Tap the task      |
 | Open the menu: plan, tag, move, delete   | Right-click the task, `Q`                     | Swipe left        |
 | Mark the task done                       | Click the circle, `D`                         | Swipe right       |
+| Start or pause tracking time             | Hover and click the play button, `Y`          | Tap the circle    |
 
+On a touch screen, the circle of a task you can track shows a play triangle, so a tap starts or pauses tracking instead of marking the task done.[^touch-play]
 The menu holds quick actions on the task.
 The details panel holds what belongs to the task: notes, subtasks, attachments, the planned date, the deadline, and the tracked time.
 With a mouse, clicking the title edits it and clicking the rest of the row focuses the task, so that the single-key shortcuts apply to it.
@@ -188,6 +193,8 @@ Inside the app, **Help → Quick tour** walks through the same basics on your ow
 
 [^history-menu]: `src/app/core-ui/work-context-menu/work-context-menu.component.html:L18-L25` — the **History** entry of the header menu.
 
-[^task-open]: `src/app/features/tasks/task/task.component.ts:L1367-L1379` — what a click or tap on a task row does.
+[^task-open]: `src/app/features/tasks/task/task.component.ts:L1382-L1395` — what a click or tap on a task row does.
+
+[^touch-play]: `src/app/features/tasks/task/task.component.ts:L241-L251` — the tasks whose circle starts and pauses tracking on touch.
 
 [^sync-default]: `src/app/features/config/default-global-config.const.ts:L244-L253` — sync is disabled by default.

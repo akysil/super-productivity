@@ -32,12 +32,20 @@
             [isWontDo]="isWontDo()"
             [isMultiSelectAware]="true"
             [isCurrent]="isCurrent()"
+            [isPlayToggle]="isTouchPlayToggle()"
             [showDoneAnimation]="showDoneAnimation()"
             [showUndoneAnimation]="showUndoneAnimation()"
             (toggled)="toggleTaskDone()"
+            (playToggled)="togglePlayPause()"
             [attr.aria-label]="
-              (isWontDo() ? T.F.TASK.CMP.TOGGLE_DONE_WONT_DO : T.F.TASK.CMP.TOGGLE_DONE)
-                | translate
+              (isTouchPlayToggle()
+                ? isCurrent()
+                  ? T.F.TASK.CMP.TRACK_TIME_STOP
+                  : T.F.TASK.CMP.TRACK_TIME
+                : isWontDo()
+                  ? T.F.TASK.CMP.TOGGLE_DONE_WONT_DO
+                  : T.F.TASK.CMP.TOGGLE_DONE
+              ) | translate
             "
           ></done-toggle>
         }

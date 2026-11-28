@@ -238,6 +238,17 @@ export class TaskComponent implements OnDestroy, AfterViewInit {
   // Use shared signals from services to avoid creating 600+ subscriptions on initial render
   isCurrent = computed(() => this._taskService.currentTaskId() === this.task().id);
   isWontDo = computed(() => isWontDoTask(this.task()));
+  // On touch the done box starts and pauses tracking, as the hover play button
+  // does with a mouse (same conditions); swiping right marks a task done (#10122).
+  isTouchPlayToggle = computed(() => {
+    const t = this.task();
+    return (
+      isTouchActive() &&
+      this._taskService.isTimeTrackingEnabled() &&
+      !t.isDone &&
+      !t.subTasks?.length
+    );
+  });
   isSelected = computed(() => this._taskService.selectedTaskId() === this.task().id);
   // Part of the transient multi-selection (modifier click, Shift+Arrow, X,
   // Ctrl/Cmd+A, touch tap in selection mode).

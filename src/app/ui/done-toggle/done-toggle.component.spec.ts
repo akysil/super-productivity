@@ -11,7 +11,10 @@ import { DoneToggleComponent } from './done-toggle.component';
       [isDone]="isDone()"
       [isWontDo]="isWontDo()"
       [isMultiSelectAware]="isMultiSelectAware()"
+      [isCurrent]="isCurrent()"
+      [isPlayToggle]="isPlayToggle()"
       (toggled)="toggledCount = toggledCount + 1"
+      (playToggled)="playToggledCount = playToggledCount + 1"
     ></done-toggle>
   `,
 })
@@ -19,7 +22,10 @@ class HostComponent {
   readonly isMultiSelectAware = signal(false);
   readonly isDone = signal(false);
   readonly isWontDo = signal(false);
+  readonly isCurrent = signal(false);
+  readonly isPlayToggle = signal(false);
   toggledCount = 0;
+  playToggledCount = 0;
 }
 
 describe('DoneToggleComponent', () => {
@@ -94,6 +100,71 @@ describe('DoneToggleComponent', () => {
     el.dispatchEvent(ev);
     expect(fixture.componentInstance.toggledCount).toBe(0);
     expect(stopped).not.toHaveBeenCalled();
+  });
+
+  // #10122: on touch the task row turns the toggle into the start/pause
+  // control of time tracking; swiping right marks the task done.
+  describe('play toggle', () => {
+    const setup = (
+      opts: { isPlayToggle: boolean; isCurrent?: boolean } = { isPlayToggle: true },
+    ): { host: HostComponent; el: HTMLElement } => {
+      const fixture = TestBed.createComponent(HostComponent);
+      fixture.componentInstance.isPlayToggle.set(opts.isPlayToggle);
+      fixture.componentInstance.isCurrent.set(!!opts.isCurrent);
+      fixture.detectChanges();
+      return {
+        host: fixture.componentInstance,
+        el: fixture.nativeElement.querySelector('done-toggle') as HTMLElement,
+      };
+    };
+
+    it('emits playToggled instead of toggled on a tap', () => {
+      const { host, el } = setup();
+      const ev = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const stopped = spyOn(ev, 'stopPropagation');
+      el.dispatchEvent(ev);
+      expect(host.playToggledCount).toBe(1);
+      expect(host.toggledCount).toBe(0);
+      expect(stopped).toHaveBeenCalled();
+    });
+
+    it('emits playToggled on Enter and Space', () => {
+      const { host, el } = setup();
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      expect(host.playToggledCount).toBe(2);
+      expect(host.toggledCount).toBe(0);
+    });
+
+    it('is a button, not a checkbox', () => {
+      const { el } = setup();
+      expect(el.getAttribute('role')).toBe('button');
+      expect(el.hasAttribute('aria-checked')).toBe(false);
+    });
+
+    it('stays a checkbox that toggles done when off', () => {
+      const { host, el } = setup({ isPlayToggle: false });
+      expect(el.getAttribute('role')).toBe('checkbox');
+      expect(el.getAttribute('aria-checked')).toBe('false');
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(host.toggledCount).toBe(1);
+      expect(host.playToggledCount).toBe(0);
+      expect(el.querySelector('.play-indicator')).toBeNull();
+    });
+
+    it('draws a muted play triangle on a task that is not tracking', () => {
+      const { el } = setup();
+      const triangle = el.querySelector('.play-indicator');
+      expect(triangle).not.toBeNull();
+      expect(triangle?.classList).toContain('play-indicator--idle');
+    });
+
+    it('keeps the accent triangle of the current task', () => {
+      const { el } = setup({ isPlayToggle: true, isCurrent: true });
+      const triangle = el.querySelector('.play-indicator');
+      expect(triangle).not.toBeNull();
+      expect(triangle?.classList).not.toContain('play-indicator--idle');
+    });
   });
 
   describe('haptic feedback', () => {

@@ -12,11 +12,10 @@ import { performHapticFeedback } from '../../util/haptic-feedback';
   /* eslint-disable @typescript-eslint/naming-convention */
   host: {
     '(click)': 'onClick($event)',
-    '(keydown.enter)': 'toggled.emit(); $event.stopPropagation()',
-    '(keydown.space)':
-      'toggled.emit(); $event.stopPropagation(); $event.preventDefault()',
-    role: 'checkbox',
-    '[attr.aria-checked]': 'isDone()',
+    '(keydown.enter)': 'emitToggle(); $event.stopPropagation()',
+    '(keydown.space)': 'emitToggle(); $event.stopPropagation(); $event.preventDefault()',
+    '[attr.role]': "isPlayToggle() ? 'button' : 'checkbox'",
+    '[attr.aria-checked]': 'isPlayToggle() ? null : isDone()',
     tabindex: '0',
     '[class.is-done]': '(showDoneAnimation() || isDone()) && !showUndoneAnimation()',
     '[class.is-current]': 'isCurrent()',
@@ -39,7 +38,15 @@ export class DoneToggleComponent {
    * the planner row, which opened the detail panel instead.
    */
   readonly isMultiSelectAware = input<boolean>(false);
+  /**
+   * Makes the toggle start and pause time tracking instead of toggling done.
+   * The task row sets it on touch, where swiping right already marks a task
+   * done and the hover play button is out of reach (#10122). A muted play
+   * triangle shows the action; the current task keeps its accent triangle.
+   */
+  readonly isPlayToggle = input<boolean>(false);
   readonly toggled = output<void>();
+  readonly playToggled = output<void>();
 
   readonly isTouchActive = isTouchActive;
 
@@ -51,10 +58,18 @@ export class DoneToggleComponent {
     }
     // Confirm completing a task by tap, like a native checkbox. Not on undo,
     // and not for keyboard or mouse toggles.
-    if (this.isTouchActive() && !this.isDone()) {
+    if (!this.isPlayToggle() && this.isTouchActive() && !this.isDone()) {
       performHapticFeedback('confirm');
     }
-    this.toggled.emit();
+    this.emitToggle();
     ev.stopPropagation();
+  }
+
+  emitToggle(): void {
+    if (this.isPlayToggle()) {
+      this.playToggled.emit();
+    } else {
+      this.toggled.emit();
+    }
   }
 }

@@ -99,6 +99,14 @@ $cross-len: 15;
     transition: opacity var(--transition-duration-m) var(--ani-standard-timing);
   }
 
+  // A task that is not tracking: a muted triangle offering "tap to start",
+  // without the pop-in, which would replay on every row when input turns touch.
+  .play-indicator--idle {
+    fill: currentColor;
+    opacity: 0.3;
+    animation: none;
+  }
+
   &.is-done {
     .done-shape {
       opacity: 0.5;
